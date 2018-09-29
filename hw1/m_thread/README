@@ -1,0 +1,18 @@
+This program (genM.c) is intended to be the
+multithreaded version of gen.c. It also takes two input
+parameters: number of files and configuration file
+name. For example, if a user enters ./genM 4
+config.dat, the program should generate 4 text files in
+the data directory (however, it is not the case at the
+moment). The filenames should be 1.txt, 2.txt, 3.txt
+and 4.txt. In the data directory, there is also a
+configuration file named config.dat (as specified as
+the second parameter) that lists all the generated data
+files. For example, the content of config.dat, based on
+the above command example, should be:
+
+1.txt
+2.txt
+3.txt
+4.txt
+
