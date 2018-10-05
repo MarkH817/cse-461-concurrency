@@ -1,70 +1,117 @@
-#include<stdio.h>
-#include<pthread.h>
-#include<stdlib.h>
-#include<time.h> //importing libraries
+/**
+ * Team Members:
+ *
+ * - Mark Hernandez
+ * - Adrian Ariffin
+ * - Greg Nail
+ *
+ * ---
+ * 
+ * Solution:
+ *
+ *  Originally, the address to the variable `i` was being passed as the argument for `createFile`.
+ * However, the variable `i` was being updated by the main thread and shared with all child threads, creating a data race.
+ *
+ * The solution involves creating an integer array `fileList` with a length as long as the number of threads.
+ * Each element has the value written, and each element's address is passed as the argument instead of `i`.
+ * This ensures that there are no shared variables among threads, thus removing the data race.
+ *
+ * ---
+ *
+ * Debugging Process Used for Solving the Issue:
+ *
+ * 1. First, we ran the `genM` program a couple of times to see where the randomness is located.
+ *
+ * 2. Statically analyze the code. Check for shared variables or pointers to shared variables.
+ *
+ * 3. (After seeing `&i` being passed to `createFile`) Print the value located at the `tid` pointer. Run the program a couple more times.
+ *
+ * 4. Implement the fix, as mentioned above.
+ */
+
+// Import libraries
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <time.h>
 
 int createFile(int *); // Prototype function
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
-	FILE *cp; //File pointer declaration
-	char filename[64]; //declares space for the filename
-	int i, bound; //declares variables
-	srand(time(0)); //seeds the random number generator using the unix epoch
-	system("rm -rf ./data"); //runs commands to through the terminal
-	system("mkdir ./data");//runs commands to through the terminal
-	if (argc < 3) {
-		fprintf(stderr,"Usage: ./genM NumberOfFiles filename (e.g., ./genM 8 config.dat)\n"); //prints the arguments for if argc is < 3
-		exit(0); //exits the program
+	FILE *cp;				 // File pointer declaration
+	char filename[64];		 // Declares space for a string of 64 characters
+	int i, bound;			 // Declares variables for counter and number of files
+	srand(time(0));			 // Seeds the random number generator using the unix epoch
+	system("rm -rf ./data"); // Runs command to delete the `./data` directory
+	system("mkdir ./data");  // Runs command to create an empty directory at `./data`
+
+	if (argc < 3)
+	{
+		fprintf(stderr, "Usage: ./genM NumberOfFiles filename (e.g., ./genM 8 config.dat)\n"); // Prints the required arguments for an incorrect amount of arguments
+		exit(0);																			   // Exits the program early
 	}
 
-	pthread_t thread[atoi(argv[1])]; // making a number of threads that is passed through the args.
-	sprintf(filename, "./data/%s", argv[2]); //system print function
-	bound = atoi(argv[1]); // converts strings to integer
-	
-	int fileList[bound]; // creates an integer array that has the same size as the bound variable
+	pthread_t thread[atoi(argv[1])];		 // Creates the array to hold thread references
+	sprintf(filename, "./data/%s", argv[2]); // Writes the resulting string in the string (or char array) variable
+	bound = atoi(argv[1]);					 // Converts string to integer
 
-	if (!(cp = fopen(filename, "w+"))) { //if you cant open the file and write to it, return 0;
-		return 0;
+	int fileList[bound]; // Creates an integer array with the same length as the thread list
+
+	// Checks if the file pointer was successful
+	if (!(cp = fopen(filename, "w+")))
+	{
+		return 0; // Exits early if not available
 	}
 
-	for (i = 0; i < bound; i++) {
-		// Set value to unique address
-		// to avoid sharing variables
+	for (i = 0; i < bound; i++)
+	{
+		// Set value to unique address to avoid sharing variables among threads
 		fileList[i] = i;
 
-		pthread_create(&thread[i], NULL, (void *) createFile, &fileList[i]); // creates a new thread with the arguements passed to it
-		sprintf(filename, "%d.txt", i + 1); //system print
-		fprintf(cp,"%s\n", filename); // file print
+		// Creates a new thread with the address of the arguments passed to it
+		pthread_create(&thread[i], NULL, (void *)createFile, &fileList[i]);
+
+		sprintf(filename, "%d.txt", i + 1); // Writes the resulting string in the string (or char array) variable
+		fprintf(cp, "%s\n", filename);		// Writes to the disk by appending the file to the list
 	}
 
-	for (i = 0; i < bound; i++) { 
-		pthread_join(thread[i], NULL); // waits for each threads to finish.
+	// Waits for each thread to finish
+	for (i = 0; i < bound; i++)
+	{
+		pthread_join(thread[i], NULL);
 	}
 
-	fclose(cp); //closes the file
-	printf("Done creating %d files.\n", bound); // print to system 
+	fclose(cp);									// Closes the file
+	printf("Done creating %d files.\n", bound); // Print to system output
 }
 
-int createFile(int * tid) //int pointer
+int createFile(int *tid)
 {
-	FILE *fp; //file pointer
-	int rep; // int variable
-	char filename[64]; //char array with 64 spaces
-	char datafilename[64]; //char array with 64 spaces
-	int (*p)() = &rand; //function pointer that is &rand
-	sprintf(filename, "%d.txt", *tid + 1); // system print the arguments given 
-	sprintf(datafilename, "./data/%s", filename); // system print the arguments given 
-	
-	printf("filename = %s\n", datafilename); // prints the arguments
-	if (!(fp = fopen(datafilename, "w+")))	//if no file, return 0
-		return 0;
-	rep = ((*p)() % 50) + 1; //pointer function call to be assigned to variable rep
-	while (rep > 0) //while the rep is more than 0 
+	FILE *fp;									  // File pointer
+	int rep;									  // Int variable to hold random numbers
+	char filename[64];							  // Declares space for a string of 64 characters
+	char datafilename[64];						  // Declares space for a string of 64 characters
+	int (*p)() = &rand;							  // Function pointer to rand()
+	sprintf(filename, "%d.txt", *tid + 1);		  // Writes the resulting string in the string (or char array) variable
+	sprintf(datafilename, "./data/%s", filename); // Writes the resulting string in the string (or char array) variable
+												  // `datafilename` holds the relative path of the file to be written F
+
+	printf("filename = %s\n", datafilename); // Prints the name of the file currently being written
+
+	// Checks if the file pointer was successful
+	if (!(fp = fopen(datafilename, "w+")))
+		return 0; // Exits early if not available
+
+	rep = ((*p)() % 50) + 1; // Call pointer to function call for random integer between [1, 50] inclusive
+
+	// Writes up to 50 numbers into the file
+	while (rep > 0)
 	{
-		fprintf(fp,"%d\n", ((*p)() % 99999) + 1); //print file with the arguments
-		rep--; //decrease rep
+		fprintf(fp, "%d\n", ((*p)() % 99999) + 1); // Prints a random integer between [1, 10000] inclusive
+		rep--;									   // Decrement the counter
 	}
-	fclose(fp); //close file pointer
-	return 1; //return 1
+
+	fclose(fp); // Close file write stream
+	return 1;   // Exits the program
 }
