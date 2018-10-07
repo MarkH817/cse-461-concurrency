@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	if (argc < 3)
 	{
 		fprintf(stderr, "Usage: ./genM NumberOfFiles filename (e.g., ./genM 8 config.dat)\n"); // Prints the required arguments for an incorrect amount of arguments
-		exit(0);																			   // Exits the program early
+		exit(0);																			   // Exits the program early using an error code of 0 signifying that the program ran properly
 	}
 
 	pthread_t thread[atoi(argv[1])];		 // Creates the array to hold thread references
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 		pthread_join(thread[i], NULL);
 	}
 
-	fclose(cp);									// Closes the file
+	fclose(cp);									// Close file write stream if the stream is closed successfully this should return a zero value but if it fails and EOF value will be returned.
 	printf("Done creating %d files.\n", bound); // Print to system output
 }
 
@@ -101,17 +101,17 @@ int createFile(int *tid)
 
 	// Checks if the file pointer was successful
 	if (!(fp = fopen(datafilename, "w+")))
-		return 0; // Exits early if not available
+		return 0; // Exits early if not available with an return code of 0
 
 	rep = ((*p)() % 50) + 1; // Call pointer to function call for random integer between [1, 50] inclusive
 
-	// Writes up to 50 numbers into the file
+	// Writes up to 50 numbers into the file and will write upto the number value of Rep when reaching this line
 	while (rep > 0)
 	{
 		fprintf(fp, "%d\n", ((*p)() % 99999) + 1); // Prints a random integer between [1, 10000] inclusive
-		rep--;									   // Decrement the counter
+		rep--;									   // Decrement the counter by 1
 	}
 
-	fclose(fp); // Close file write stream
-	return 1;   // Exits the program
+	fclose(fp); // Close file write stream if the stream is closed successfully this should return a zero value but if it fails and EOF value will be returned.
+	return 1;   // Exits the program with an return code of 1
 }
