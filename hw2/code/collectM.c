@@ -19,19 +19,26 @@
 
 Node *start = NULL;
 
+// global variables
+int filesPerThread = 2;
+int fileCount = 0;
+
 void addData(int);
+
+void concatLists(Node *, Node *);
+int readFiles(int *, char * [], Node * []);
 
 int main(int argc, char *argv[])
 {
     FILE *fp;
-    //char filename[50][128];
     int numfile = 0;
     char buffer[128];
-    int i = 0, dat;
+    int i = 0;
+    int dat;
 
     if (argc < 2)
     {
-        fprintf(stderr, "Usage: ./collectS filename \n");
+        fprintf(stderr, "Usage: ./collectM filename \n");
         exit(0);
     }
 
@@ -44,6 +51,13 @@ int main(int argc, char *argv[])
     {
         numfile++;
     }
+
+    // Save the total fileCount to global
+    fileCount = numfile;
+
+    // Will hold the chunks of data recorded
+    // Each element is the pointer to a Linked List Node
+    Node *subLists[numfile];
 
     char filename[numfile][128];
     fseek(fp, 0, SEEK_SET);
@@ -82,4 +96,47 @@ void addData(int dat)
     newNode->data = dat;
     newNode->next = start;
     start = newNode;
+}
+
+/**
+ * Concat the LinkedLists into one list.
+ *
+ * The end of the `base` list shall point to the start of the `tail` list.
+ */
+void concatLists(Node *base, Node *tail)
+{
+    Node *temp = base;
+    Node *next = NULL;
+
+    while (temp != NULL)
+    {
+        next = temp->next;
+
+        if (next == NULL)
+        {
+            temp->next = tail;
+            return;
+        }
+        else
+        {
+            temp = next;
+        }
+    }
+}
+
+/**
+ * Reads the files and creates a list for the data read.
+ *
+ * Relevant global variables:
+ * - [Read-only] `filesPerThread`
+ * - [Read-only] `fileCount`
+ *
+ * Parameters:
+ * - [Read-only] `section` is the threadId determining what chunk of files will be read
+ * - [Read-only] `filesnames` is the list of files to be read
+ * - [Write-only] `results` is the list of results pointing to the head of a Linked List
+ */
+int readFiles(int *section, char *filenames[], Node *results[])
+{
+    return 1;
 }
