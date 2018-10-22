@@ -9,7 +9,21 @@
  *
  * Absolute Speed-Up:
  *
- * - [Insert result here]
+ * - n/a
+ *
+ * ---
+ *
+ * Debugging notes:
+ *
+ * This program randomly reaches a segmentation fault or abort with a "(core dump)" message.
+ * The location of the error rising is not consistent.
+ * It sometimes occurs outside of the threading area.
+ * However, when using `gdb`, the program runs as expected most times, while debugging.
+ * To our knowledge, we can't figure out what is causing the program to fail.
+ * There's no data race, since each thread writes to a unique element in the `listSections` array.
+ * We're assuming that the source of the problem lies outside this program.
+ * Sometimes the faults point to either `/lib64/libc.so.6` or malloc
+ * Aside from that, when it does complete, it does ensure that all 922 nodes exist.
  */
 
 #include <stdio.h>
@@ -92,14 +106,19 @@ int main(int argc, char *argv[])
     for (i = 0; i < threadCount; i++)
     {
         subLists[i] = NULL;
+
+        // Pass the readFiles function
+        // Pass by value the integer between [0, threadCount)
         pthread_create(&thread[i], NULL, (void *)readFiles, (void *)i);
     }
 
+    // Wait for all threads to finish
     for (i = 0; i < threadCount; i++)
     {
         pthread_join(thread[i], NULL);
     }
 
+    // Merge all lists into one main list
     for (i = 0; i < threadCount; i++)
     {
         if (i == 0) {
@@ -109,6 +128,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Free the memory and clear the list
     destroyList(list);
 
     return 0;
@@ -121,11 +141,11 @@ int main(int argc, char *argv[])
  * Relevant global variables:
  * - [Read-only] `filesPerThread`
  * - [Read-only] `fileCount`
+ * - [Read-only] `files` is the list of files to be read
+ * - [Write-only] `listSectoins` is the list of results pointing to the head of a Linked List
  *
  * Parameters:
  * - [Read-only] `tid` determines which chunk of files will be read
- * - [Read-only] `files` is the list of files to be read
- * - [Write-only] `results` is the list of results pointing to the head of a Linked List
  */
 int readFiles(void *tid)
 {
@@ -150,10 +170,12 @@ int readFiles(void *tid)
         max = fileCount;
     }
 
+    // Read only a chunk of the files listed in the `files` array
     while (offset < max)
     {
         sprintf(buffer, "../data/%s", &(files[128 * offset]));
 
+        // Exit early if file is not available
         if (!(fp = fopen(buffer, "r")))
         {
             return 0;
@@ -173,7 +195,7 @@ int readFiles(void *tid)
         offset++;
     }
 
-    // Save pointer to local list to results array
+    // Save pointer to local list to result array `listSections`
     listSections[section] = start;
 
     return 1;
@@ -189,17 +211,21 @@ void concatLists(Node *base, Node *tail)
     Node *temp = base;
     Node *next = NULL;
 
+    // Traverse the base list until reaching the last node of that list
     while (temp != NULL)
     {
         next = temp->next;
 
         if (next == NULL)
         {
+            // Reach last node
+            // Point to the start of the next list
             temp->next = tail;
             return;
         }
         else
         {
+            // Keep traversing
             temp = next;
         }
     }
