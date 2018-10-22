@@ -1,5 +1,5 @@
 collectM : helper.o collectM.o malloc.o
-	gcc -o collectM helper.o collectM.o malloc.o
+	gcc -lpthread -o collectM helper.o collectM.o malloc.o
 
 collectS : helper.o collectS.o malloc.o
 	gcc -o collectS helper.o collectS.o malloc.o
@@ -13,7 +13,7 @@ collectS.o : collectS.c
 	gcc -c -w collectS.c
 
 collectM.o : collectM.c
-	gcc -lpthread -c -w collectM.c
+	gcc -lpthread -c -w -g collectM.c
 
 clean :
 	rm collectM collectM.o helper.o malloc.o
