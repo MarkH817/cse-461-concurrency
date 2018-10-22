@@ -20,8 +20,10 @@
 // global variables
 int filesPerThread = 2;
 int fileCount = 0;
+char *files = 0;
+Node **listSections = NULL;
 
-int readFiles(void *, char *[], Node *[]);
+int readFiles(void *);
 void concatLists(Node *, Node *);
 
 int main(int argc, char *argv[])
@@ -63,6 +65,7 @@ int main(int argc, char *argv[])
     // Will hold the chunks of data recorded
     // Each element is the pointer to a Linked List Node
     Node *subLists[threadCount];
+    listSections = subLists;
 
     // Prepare threads
     pthread_t thread[threadCount];
@@ -83,28 +86,32 @@ int main(int argc, char *argv[])
     // Close the input file pointer
     fclose(fp);
 
+    // Save filenames to global
+    files = filename;
+
     for (i = 0; i < threadCount; i++)
     {
-        sublists[i] = NULL;
-        pthread_create(&thread[i], NULL, (void *)readFiles, (void *)i, filename, sublists);
+        subLists[i] = NULL;
+        pthread_create(&thread[i], NULL, (void *)readFiles, (void *)i);
     }
 
     for (i = 0; i < threadCount; i++)
     {
         pthread_join(thread[i], NULL);
+    }
 
-        if (i == 0)
-        {
-            list = sublists[i];
-        }
-        else
-        {
-            concatLists(sublists[i - 1], sublists[i]);
+    for (i = 0; i < threadCount; i++)
+    {
+        if (i == 0) {
+            list = subLists[i];
+        } else {
+            concatLists(subLists[i - 1], subLists[i]);
         }
     }
 
-    printList(list);
     destroyList(list);
+
+    return 0;
 }
 
 
@@ -117,10 +124,10 @@ int main(int argc, char *argv[])
  *
  * Parameters:
  * - [Read-only] `tid` determines which chunk of files will be read
- * - [Read-only] `filesnames` is the list of files to be read
+ * - [Read-only] `files` is the list of files to be read
  * - [Write-only] `results` is the list of results pointing to the head of a Linked List
  */
-int readFiles(void *tid, char *filenames[], Node *results[])
+int readFiles(void *tid)
 {
     FILE *fp;
     char buffer[128];
@@ -145,7 +152,7 @@ int readFiles(void *tid, char *filenames[], Node *results[])
 
     while (offset < max)
     {
-        sprintf(buffer, "../data/%s", filenames[offset]);
+        sprintf(buffer, "../data/%s", &(files[128 * offset]));
 
         if (!(fp = fopen(buffer, "r")))
         {
@@ -167,7 +174,7 @@ int readFiles(void *tid, char *filenames[], Node *results[])
     }
 
     // Save pointer to local list to results array
-    results[section] = start;
+    listSections[section] = start;
 
     return 1;
 }
