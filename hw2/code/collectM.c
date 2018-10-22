@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdlib.h>
 #include "helper/helper.h"
 
@@ -36,6 +37,9 @@ int filesPerThread = 2;
 int fileCount = 0;
 char *files;
 Node **listSections = NULL;
+
+// Memory mutex
+sem_t memMutex;
 
 int readFiles(void *);
 void concatLists(Node *, Node *);
@@ -83,6 +87,9 @@ int main(int argc, char *argv[])
 
     // Prepare threads
     pthread_t thread[threadCount];
+
+    // Initialize memory mutex
+    sem_init(&memMutex, 0, 1);
 
     // Reset the file pointer to the beginning of the file
     fseek(fp, 0, SEEK_SET);
@@ -142,7 +149,8 @@ int main(int argc, char *argv[])
  * - [Read-only] `filesPerThread`
  * - [Read-only] `fileCount`
  * - [Read-only] `files` is the list of files to be read
- * - [Write-only] `listSectoins` is the list of results pointing to the head of a Linked List
+ * - [Write-only] `listSections` is the list of results pointing to the head of a 
+Linked List
  *
  * Parameters:
  * - [Read-only] `tid` determines which chunk of files will be read
@@ -184,7 +192,20 @@ int readFiles(void *tid)
         while (fscanf(fp, "%d\n", &data) != EOF)
         {
             // Add data to local list
-            Node *newNode = (Node *)malloc(sizeof(Node));
+            Node *newNode;
+
+            // Lock
+            sem_wait(&memMutex);
+
+            newNode = (Node *)malloc(sizeof(Node));
+
+            // Unlock
+            sem_post(&memMutex);
+
+            if (newNode == NULL) {
+                return 0;
+            }
+
             newNode->data = data;
             newNode->next = start;
             start = newNode;
