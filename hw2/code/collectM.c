@@ -20,7 +20,7 @@
 // global variables
 int filesPerThread = 2;
 int fileCount = 0;
-char *files = 0;
+char *files;
 Node **listSections = NULL;
 
 int readFiles(void *);

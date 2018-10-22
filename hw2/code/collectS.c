@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		}
 		fclose(fp);
 	}
-	printList(start);
+	//printList(start);
 	destroyList(start);
 }
 
