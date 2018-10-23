@@ -9,21 +9,7 @@
  *
  * Absolute Speed-Up:
  *
- * - n/a
- *
- * ---
- *
- * Debugging notes:
- *
- * This program randomly reaches a segmentation fault or abort with a "(core dump)" message.
- * The location of the error rising is not consistent.
- * It sometimes occurs outside of the threading area.
- * However, when using `gdb`, the program runs as expected most times, while debugging.
- * To our knowledge, we can't figure out what is causing the program to fail.
- * There's no data race, since each thread writes to a unique element in the `listSections` array.
- * We're assuming that the source of the problem lies outside this program.
- * Sometimes the faults point to either `/lib64/libc.so.6` or malloc
- * Aside from that, when it does complete, it does ensure that all 922 nodes exist.
+ * - Sp = 0.25
  */
 
 #include <stdio.h>
@@ -223,7 +209,9 @@ int readFiles(void *tid)
             start = newNode;
         }
 
+        sem_wait(&memMutex);
         fclose(fp);
+        sem_post(&memMutex);
 
         offset++;
     }
