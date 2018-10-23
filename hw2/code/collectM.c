@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
     // Save filenames to global
     files = filename;
 
+    sem_wait(&memMutex);
     for (i = 0; i < threadCount; i++)
     {
         subLists[i] = NULL;
@@ -118,6 +119,7 @@ int main(int argc, char *argv[])
         // Pass by value the integer between [0, threadCount)
         pthread_create(&thread[i], NULL, (void *)readFiles, (void *)i);
     }
+    sem_post(&memMutex);
 
     // Wait for all threads to finish
     for (i = 0; i < threadCount; i++)
@@ -161,6 +163,7 @@ int readFiles(void *tid)
     char buffer[128];
     int data;
     Node *start = NULL;
+    Node *newNode = NULL;
 
     int section = (int)tid;
     int offset = section * filesPerThread;
@@ -183,23 +186,21 @@ int readFiles(void *tid)
     {
         sprintf(buffer, "../data/%s", &(files[128 * offset]));
 
+        sem_wait(&memMutex);
+
         // Exit early if file is not available
         if (!(fp = fopen(buffer, "r")))
         {
             return 0;
         }
 
+        sem_post(&memMutex);
+
         while (fscanf(fp, "%d\n", &data) != EOF)
         {
             // Add data to local list
-            Node *newNode;
-
-            // Lock
             sem_wait(&memMutex);
-
             newNode = (Node *)malloc(sizeof(Node));
-
-            // Unlock
             sem_post(&memMutex);
 
             if (newNode == NULL) {
