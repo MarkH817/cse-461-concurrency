@@ -38,7 +38,9 @@ int fileCount = 0;
 char *files;
 Node **listSections = NULL;
 
-// Memory mutex
+// Mutex
+sem_t initMutex;
+sem_t fileMutex;
 sem_t memMutex;
 
 int readFiles(void *);
@@ -88,7 +90,9 @@ int main(int argc, char *argv[])
     // Prepare threads
     pthread_t thread[threadCount];
 
-    // Initialize memory mutex
+    // Initialize mutex
+    sem_init(&initMutex, 0, 1);
+    sem_init(&fileMutex, 0, 1);
     sem_init(&memMutex, 0, 1);
 
     // Reset the file pointer to the beginning of the file
@@ -110,7 +114,7 @@ int main(int argc, char *argv[])
     // Save filenames to global
     files = filename;
 
-    sem_wait(&memMutex);
+    sem_wait(&initMutex);
     for (i = 0; i < threadCount; i++)
     {
         subLists[i] = NULL;
@@ -119,7 +123,7 @@ int main(int argc, char *argv[])
         // Pass by value the integer between [0, threadCount)
         pthread_create(&thread[i], NULL, (void *)readFiles, (void *)i);
     }
-    sem_post(&memMutex);
+    sem_post(&initMutex);
 
     // Wait for all threads to finish
     for (i = 0; i < threadCount; i++)
@@ -169,6 +173,9 @@ int readFiles(void *tid)
     int offset = section * filesPerThread;
     int max = offset + filesPerThread;
 
+    sem_wait(&initMutex);
+    sem_post(&initMutex);
+
     // Exit early if given invalid section
     if (section < 0)
     {
@@ -186,15 +193,19 @@ int readFiles(void *tid)
     {
         sprintf(buffer, "../data/%s", &(files[128 * offset]));
 
+        sem_wait(&fileMutex);
         sem_wait(&memMutex);
 
+        fp = fopen(buffer, "r");
+
+        sem_post(&memMutex);
+        sem_post(&fileMutex);
+
         // Exit early if file is not available
-        if (!(fp = fopen(buffer, "r")))
+        if (!fp)
         {
             return 0;
         }
-
-        sem_post(&memMutex);
 
         while (fscanf(fp, "%d\n", &data) != EOF)
         {
