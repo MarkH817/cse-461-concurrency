@@ -4,7 +4,7 @@ sortM: sort.o helper.o malloc.o
 	gcc -pg -lpthread -o sortM sort.o helper.o malloc.o 
 
 sortM.o: sortM.c
-    gcc -pg -lpthread -c -w sortM.c
+	gcc -pg -lpthread -c -w sortM.c
 
 sortS: sort.o helper.o malloc.o
 	gcc -pg -lpthread -o sortS sort.o helper.o malloc.o 
