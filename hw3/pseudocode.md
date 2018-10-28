@@ -16,7 +16,7 @@ nodeListToArray(Node*) -> int*
 // Thread work
 // Starts w/ 2 threads
 // ...
-// mergeLists(...)
+// merge(...)
 
 arrayToNodeList(int*) -> Node*
 ```
@@ -38,13 +38,13 @@ recursiveSort(SortArg*) {
 
     int* list = SortArg -> list
 
-    if (length >= MIN_LENGTH_PARALLEL) {
+    if (length > MIN_LENGTH_PARALLEL) {
         // Split in half, then pass to 2 more threads
         SortArg left, right;
         // ...
 
         // Merge lists
-        mergeLists(left, right)
+        merge(left, right)
     } else {
         // Perform sequential sort
         mergeSort(SortArg*)
