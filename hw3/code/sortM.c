@@ -111,7 +111,7 @@ Node *mergeSortParallel(Node *list)
 	argsLeft.end = midwayPoint;
 
 	SortArgs argsRight;
-	argsRight.list = &array[midwayPoint];
+	argsRight.list = array;
 	argsRight.start = midwayPoint;
 	argsRight.end = length;
 
@@ -200,7 +200,7 @@ int recursiveSort(SortArgs *args)
 		left.end = midpoint;
 
 		SortArgs right;
-		right.list = &list[midpoint];
+		right.list = list;
 		right.start = midpoint;
 		right.end = end;
 
@@ -221,14 +221,93 @@ int recursiveSort(SortArgs *args)
 	}
 }
 
-// TODO
 // Sequential / regular version of the algorithm
 void mergeSort(SortArgs *args)
 {
+	int *list = args->list;
+	int start = args->start;
+	int end = args->end;
+	int length = end - start;
+	int midpoint = length / 2 + start;
+
+	if (length <= 1)
+	{
+		return;
+	}
+
+	SortArgs left;
+	left.list = list;
+	left.start = start;
+	left.end = midpoint;
+
+	SortArgs right;
+	right.list = list;
+	right.start = midpoint;
+	right.end = end;
+
+	mergeSort(left);
+	mergeSort(right);
+
+	merge(left, right);
 }
 
-// TODO
 // Should sort the input array when merging
 void merge(SortArgs *leftArgs, SortArgs *rightArgs)
 {
+	int *list = leftArgs->list;
+
+	int leftStart = leftArgs->start;
+	int leftEnd = leftArgs->end;
+	int rightStart = rightArgs->start;
+	int rightEnd = rightArgs->end;
+
+	int length = rightEnd - leftStart;
+	int currentLeft = leftStart;
+	int currentRight = rightStart;
+
+	int *sortedList = (int *)(malloc(sizeof(int) * length));
+	int i = 0;
+
+	// merge the lists
+	while ((currentLeft < leftEnd) && (currentRight < rightEnd))
+	{
+		if (list[currentLeft] <= list[currentRight])
+		{
+			sortedList[i] = list[currentLeft];
+			currentLeft++;
+		}
+		else
+		{
+			sortedList[i] = list[currentRight];
+			currentRight++;
+		}
+
+		i++;
+	}
+
+	if (i < length)
+	{
+		// Add the rest of the left sublist
+		while (currentLeft < leftEnd)
+		{
+			sortedList[i] = list[currentLeft];
+			currentLeft++;
+			i++;
+		}
+
+		// Add the rest of the right sublist
+		while (currentRight < rightEnd)
+		{
+			sortedList[i] = list[currentRight];
+			currentRight++;
+			i++;
+		}
+	}
+
+	// copy back into original list
+	for (i = 0; i < length; i++) {
+		list[i + leftStart] = sortedList[i];
+	}
+
+	free(sortedList);
 }
