@@ -11,7 +11,7 @@
 #define ITEMS 1 << 13
 #define THREADS 1 << 3
 
-#define MIN_LEN_PARALLEL 1 << 4
+#define MIN_LEN_PARALLEL 1 << 7
 
 // Define sort arguments datatype
 typedef struct SortArguments
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 	printList(start);
 	printf("\n");
 	destroyList(previousList);
-	destroyList(start);
+	// destroyList(start);
 
 	return 0;
 }
