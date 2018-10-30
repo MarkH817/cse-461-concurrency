@@ -9,7 +9,7 @@
 #include "./helper/helper.h"
 
 #define ITEMS 1 << 13
-#define THREADS 1 << 3
+#define THREADS 1 << 6
 
 #define MIN_LEN_PARALLEL 1 << 6
 #define USE_LOCKS 1
@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
 	printf("\n Linked list after sorting ");
 	printList(start);
 	printf("\n");
-	destroyList(previousList);
-	// destroyList(start);
+	// destroyList(previousList);
+	destroyList(start);
 
 	return 0;
 }
@@ -185,9 +185,9 @@ int nodeListCount(Node *list)
 
 int recursiveSort(SortArgs *args)
 {
+	int* list = args->list;
 	int start = args->start;
 	int end = args->end;
-	int list = args->list;
 
 	int length = start - end;
 
