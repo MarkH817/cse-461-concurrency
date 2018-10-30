@@ -158,14 +158,14 @@ Node *arrayToNodeList(int *array, int length)
 	Node *temp;
 	int index = length - 1;
 
-	while (length >= 0)
+	while (index >= 0)
 	{
 		temp = (Node *)(malloc(sizeof(Node)));
 		temp->next = start;
 		temp->data = array[index];
 
 		start = temp;
-		length--;
+		index--;
 	}
 }
 
@@ -252,8 +252,6 @@ void mergeSort(SortArgs *args)
 	mergeSort(&right);
 
 	merge(&left, &right);
-
-	fprintf(stderr, "Sorted [%d - %d]\n", start, end);
 }
 
 // Should sort the input array when merging
@@ -295,23 +293,20 @@ void merge(SortArgs *leftArgs, SortArgs *rightArgs)
 		i++;
 	}
 
-	if (i < length)
+	// Add the rest of the left sublist
+	while ((currentLeft < leftEnd) && (i < length))
 	{
-		// Add the rest of the left sublist
-		while (currentLeft < leftEnd)
-		{
-			sortedList[i] = list[currentLeft];
-			currentLeft++;
-			i++;
-		}
+		sortedList[i] = list[currentLeft];
+		currentLeft++;
+		i++;
+	}
 
-		// Add the rest of the right sublist
-		while (currentRight < rightEnd)
-		{
-			sortedList[i] = list[currentRight];
-			currentRight++;
-			i++;
-		}
+	// Add the rest of the right sublist
+	while ((currentRight < rightEnd) && (i < length))
+	{
+		sortedList[i] = list[currentRight];
+		currentRight++;
+		i++;
 	}
 
 	// copy back into original list
