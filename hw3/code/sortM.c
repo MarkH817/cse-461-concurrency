@@ -9,9 +9,9 @@
 #include "./helper/helper.h"
 
 #define ITEMS 1 << 13
-#define THREADS 1 << 6
+#define THREADS 1 << 3
 
-#define MIN_LEN_PARALLEL 1 << 6
+#define MIN_LEN_PARALLEL 1 << 7
 #define USE_LOCKS 1
 
 // Define sort arguments datatype
@@ -122,8 +122,8 @@ Node *mergeSortParallel(Node *list)
 	pthread_create(&sortLeft, NULL, (void *)recursiveSort, &argsLeft);
 	pthread_create(&sortRight, NULL, (void *)recursiveSort, &argsRight);
 
-	pthread_join(&sortLeft, NULL);
-	pthread_join(&sortRight, NULL);
+	pthread_join(sortLeft, NULL);
+	pthread_join(sortRight, NULL);
 
 	// merge 2 lists
 	merge(&argsLeft, &argsRight);
@@ -211,8 +211,8 @@ int recursiveSort(SortArgs *args)
 		pthread_create(&sortLeft, NULL, (void *)recursiveSort, &left);
 		pthread_create(&sortRight, NULL, (void *)recursiveSort, &right);
 
-		pthread_join(&sortLeft, NULL);
-		pthread_join(&sortRight, NULL);
+		pthread_join(sortLeft, NULL);
+		pthread_join(sortRight, NULL);
 
 		merge(&left, &right);
 	}
