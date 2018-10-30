@@ -11,7 +11,8 @@
 #define ITEMS 1 << 13
 #define THREADS 1 << 3
 
-#define MIN_LEN_PARALLEL 1 << 7
+#define MIN_LEN_PARALLEL 1 << 6
+#define USE_LOCKS 1
 
 // Define sort arguments datatype
 typedef struct SortArguments
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
 
 	if (argc != 1)
 	{
-		fprintf(stderr, "Usage: ./sortS \n");
+		fprintf(stderr, "Usage: ./sortM \n");
 		exit(0);
 	}
 	else
@@ -125,7 +126,7 @@ Node *mergeSortParallel(Node *list)
 	pthread_join(&sortRight, NULL);
 
 	// merge 2 lists
-	merge(leftArgs, rightArgs);
+	merge(&argsLeft, &argsRight);
 
 	Node *sortedList = arrayToNodeList(array, length);
 	free(array);
@@ -213,12 +214,14 @@ int recursiveSort(SortArgs *args)
 		pthread_join(&sortLeft, NULL);
 		pthread_join(&sortRight, NULL);
 
-		merge(leftArgs, rightArgs);
+		merge(&left, &right);
 	}
 	else
 	{
 		mergeSort(args);
 	}
+
+	return 1;
 }
 
 // Sequential / regular version of the algorithm
@@ -245,10 +248,12 @@ void mergeSort(SortArgs *args)
 	right.start = midpoint;
 	right.end = end;
 
-	mergeSort(left);
-	mergeSort(right);
+	mergeSort(&left);
+	mergeSort(&right);
 
-	merge(left, right);
+	merge(&left, &right);
+
+	fprintf(stderr, "Sorted [%d - %d]\n", start, end);
 }
 
 // Should sort the input array when merging
@@ -268,8 +273,13 @@ void merge(SortArgs *leftArgs, SortArgs *rightArgs)
 	int *sortedList = (int *)(malloc(sizeof(int) * length));
 	int i = 0;
 
+	if (sortedList == NULL) {
+		fprintf(stderr, "Error\n");
+		return;
+	}
+
 	// merge the lists
-	while ((currentLeft < leftEnd) && (currentRight < rightEnd))
+	while ((currentLeft < leftEnd) && (currentRight < rightEnd) && (i < length))
 	{
 		if (list[currentLeft] <= list[currentRight])
 		{

@@ -1,7 +1,7 @@
 build: sortM sortS
 
-sortM: sort.o helper.o malloc.o
-	gcc -pg -lpthread -o sortM sort.o helper.o malloc.o 
+sortM: sortM.o helper.o malloc.o
+	gcc -pg -lpthread -o sortM sortM.o helper.o malloc.o 
 
 sortM.o: sortM.c
 	gcc -pg -lpthread -c -w sortM.c
