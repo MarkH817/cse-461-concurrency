@@ -1,3 +1,11 @@
+/**
+ * Team Members:
+ *
+ * - Mark Hernandez
+ * - Adrian Ariffin
+ * - Greg Nail
+ */
+
 /* This program originates from a version available
  * from:
  * https://www.geeksforgeeks.org/c-program-bubble-sort-linked-list/
@@ -129,11 +137,17 @@ Node *mergeSortParallel(Node *list)
 	merge(&argsLeft, &argsRight);
 
 	Node *sortedList = arrayToNodeList(array, length);
+
+	// Free the memory of the temporary array
 	free(array);
 
 	return sortedList;
 }
 
+
+/**
+ * Convert the Node list into an array
+ */
 int *nodeListToArray(Node *list, int length)
 {
 	int *array = (int *)(malloc(sizeof(int) * length));
@@ -151,7 +165,11 @@ int *nodeListToArray(Node *list, int length)
 	return array;
 }
 
-// **Note**: Must insert from end to start
+/**
+ * Convert the array back into a Node list
+ *
+ * **Note**: Must insert from end to start
+ */
 Node *arrayToNodeList(int *array, int length)
 {
 	Node *start = NULL;
@@ -169,6 +187,9 @@ Node *arrayToNodeList(int *array, int length)
 	}
 }
 
+/**
+ * Count the length of a Node list
+ */
 int nodeListCount(Node *list)
 {
 	int count = 0;
@@ -183,6 +204,13 @@ int nodeListCount(Node *list)
 	return count;
 }
 
+/**
+ * Recursively spawn new threads to sort a partition of the list
+ * if the partition is long enough.
+ *
+ * Otherwise, sort the partition within the thread.
+ */
+
 int recursiveSort(SortArgs *args)
 {
 	int* list = args->list;
@@ -191,6 +219,8 @@ int recursiveSort(SortArgs *args)
 
 	int length = start - end;
 
+	// If the list length is greater than the specified constant
+	// Continue splitting via more threads
 	if (length > MIN_LEN_PARALLEL)
 	{
 		int midpoint = (length / 2) + start;
@@ -214,10 +244,12 @@ int recursiveSort(SortArgs *args)
 		pthread_join(sortLeft, NULL);
 		pthread_join(sortRight, NULL);
 
+		// Merge the 2 sorted partitions
 		merge(&left, &right);
 	}
 	else
 	{
+		// Perform a merge sort within the same thread
 		mergeSort(args);
 	}
 
@@ -233,6 +265,7 @@ void mergeSort(SortArgs *args)
 	int length = end - start;
 	int midpoint = length / 2 + start;
 
+	// Early exit since a list length of 1 or less is sorted by definition
 	if (length <= 1)
 	{
 		return;
@@ -248,9 +281,11 @@ void mergeSort(SortArgs *args)
 	right.start = midpoint;
 	right.end = end;
 
+	// Recursively call for the 2 partitions
 	mergeSort(&left);
 	mergeSort(&right);
 
+	// Merge the sorted partitions
 	merge(&left, &right);
 }
 
@@ -309,7 +344,7 @@ void merge(SortArgs *leftArgs, SortArgs *rightArgs)
 		i++;
 	}
 
-	// copy back into original list
+	// Copy back into original list
 	for (i = 0; i < length; i++) {
 		list[i + leftStart] = sortedList[i];
 	}
